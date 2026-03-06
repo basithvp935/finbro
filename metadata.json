@@ -1,0 +1,7 @@
+{
+  "name": "Finbro",
+  "description": "A production-grade cloud accounting and bookkeeping platform for service-based startups, featuring automated financial statements and double-entry validation.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
