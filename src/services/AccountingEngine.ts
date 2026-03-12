@@ -1,5 +1,5 @@
 
-import { Account, Transaction, TrialBalanceRow, FinancialStatementRow, AccountType } from './types';
+import { Account, Transaction, TrialBalanceRow, FinancialStatementRow, AccountType } from '../types';
 
 export interface DateRange {
   startDate: string;

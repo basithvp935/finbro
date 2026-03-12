@@ -1,16 +1,16 @@
 
 import React, { useState, useCallback } from 'react';
 import { AppProvider, useApp } from './store';
-import Layout from './components/Layout';
-import Dashboard from './components/Dashboard';
-import TransactionsList from './components/TransactionsList';
-import Invoicing from './components/Invoicing';
-import FinancialStatements from './components/FinancialStatements';
-import Reconciliation from './components/Reconciliation';
-import AccountManagement from './components/AccountManagement';
-import PayrollManagement from './components/PayrollManagement';
-import LandingPage from './components/LandingPage';
-import { AccountingEngine } from './accountingEngine';
+import Layout from './components/layout/Layout';
+import Dashboard from './pages/Dashboard';
+import TransactionsList from './components/common/TransactionsList';
+import Invoicing from './pages/Invoicing';
+import FinancialStatements from './pages/FinancialStatements';
+import Reconciliation from './pages/Reconciliation';
+import AccountManagement from './pages/AccountManagement';
+import PayrollManagement from './pages/PayrollManagement';
+import LandingPage from './pages/LandingPage';
+import { AccountingEngine } from './services/AccountingEngine';
 
 const Settings: React.FC = () => {
   const { accounts, updateOpeningBalance, transactions } = useApp();

@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { Account, Transaction, Invoice, Company, User, BankStatementEntry, Employee, PayrollEntry } from './types';
-import { DEFAULT_CHART_OF_ACCOUNTS, MOCK_COMPANY } from './constants';
+import { Account, Transaction, Invoice, Company, User, BankStatementEntry, Employee, PayrollEntry } from '../types';
+import { DEFAULT_CHART_OF_ACCOUNTS, MOCK_COMPANY } from '../constants';
 
 interface DeletionAudit {
   timestamp: string;
