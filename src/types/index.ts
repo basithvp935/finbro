@@ -21,6 +21,12 @@ export interface JournalEntryLine {
   receipt?: string; // Reference text
 }
 
+export interface Attachment {
+  name: string;
+  type: string;
+  url: string; // Base64 or Blob URL
+}
+
 export interface Transaction {
   id: string;
   date: string;
@@ -29,7 +35,7 @@ export interface Transaction {
   lines: JournalEntryLine[];
   type: 'General' | 'Invoice' | 'Payment' | 'Receipt' | 'Payroll';
   status: 'Posted' | 'Draft';
-  attachments?: string[]; // Base64 or URLs of images/docs
+  attachments?: (string | Attachment)[]; // Base64, URLs, or Rich Metadata
 }
 
 export interface BankStatementEntry {

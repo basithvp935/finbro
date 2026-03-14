@@ -27,6 +27,8 @@ interface AppState {
   setEndDate: (date: string) => void;
   setAccounts: React.Dispatch<React.SetStateAction<Account[]>>;
   addAccount: (account: Account) => void;
+  updateAccount: (id: string, updates: Partial<Account>) => void;
+  deleteAccount: (id: string) => void;
   setTransactions: React.Dispatch<React.SetStateAction<Transaction[]>>;
   setInvoices: React.Dispatch<React.SetStateAction<Invoice[]>>;
   addTransaction: (tx: Transaction) => void;
@@ -43,6 +45,8 @@ interface AppState {
   updateBankEntry: (id: string, updates: Partial<BankStatementEntry>) => void;
   login: (email: string) => void;
   logout: () => void;
+  theme: 'light' | 'dark';
+  toggleTheme: () => void;
 }
 
 const AppContext = createContext<AppState | undefined>(undefined);
@@ -65,13 +69,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [company] = useState<Company>(MOCK_COMPANY);
   const [user, setUser] = useState<User | null>(null);
   const [auditLog, setAuditLog] = useState<DeletionAudit[]>([]);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
   const today = new Date();
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(today.getDate() - 30);
 
-  const firstDay = thirtyDaysAgo.toISOString().split('T')[0];
-  const lastDay = today.toISOString().split('T')[0];
+  const firstDay = thirtyDaysAgo.toLocaleDateString('en-CA');
+  const lastDay = today.toLocaleDateString('en-CA');
 
   const [startDate, setStartDate] = useState(firstDay);
   const [endDate, setEndDate] = useState(lastDay);
@@ -97,6 +102,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const savedTxs = localStorage.getItem('ledger_transactions');
     const savedEmps = localStorage.getItem('ledger_employees');
     const savedPR = localStorage.getItem('ledger_payroll');
+    const savedTheme = localStorage.getItem('app_theme') as 'light' | 'dark' | null;
+
+    if (savedTheme) {
+      setTheme(savedTheme);
+      document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      setTheme('dark');
+      document.documentElement.classList.add('dark');
+    }
 
     if (savedAccounts) {
       const parsed = JSON.parse(savedAccounts) as Account[];
@@ -125,6 +139,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setAccounts(prev => [...prev, account]);
   };
 
+  const updateAccount = (id: string, updates: Partial<Account>) => {
+    setAccounts(prev => prev.map(acc => acc.id === id ? { ...acc, ...updates } : acc));
+  };
+
+  const deleteAccount = (id: string) => {
+    setAccounts(prev => prev.filter(acc => acc.id !== id));
+  };
+
   const updateBankEntry = (id: string, updates: Partial<BankStatementEntry>) => {
     setBankEntries(prev => prev.map(entry => entry.id === id ? { ...entry, ...updates } : entry));
   };
@@ -144,6 +166,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deleteTransaction = (id: string, reason?: string) => {
+    const tx = transactions.find(t => t.id === id);
+    if (tx) {
+      setAuditLog(prev => [{
+        timestamp: new Date().toISOString(),
+        transactionId: id,
+        reference: tx.reference || 'N/A',
+        user: 'Admin Accountant',
+        reason: reason || 'Manual Deletion'
+      }, ...prev]);
+    }
     setTransactions(prev => prev.filter(t => t.id !== id));
     setBankEntries(prev => prev.map(e => e.matchedTransactionId === id ? { ...e, matchedTransactionId: undefined } : e));
   };
@@ -177,7 +209,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const addEmployee = (emp: Employee) => setEmployees(prev => [...prev, emp]);
-  const deleteEmployee = (id: string) => setEmployees(prev => prev.filter(e => e.id !== id));
+  const deleteEmployee = (id: string) => {
+    const emp = employees.find(e => e.id === id);
+    if (emp) {
+      setAuditLog(prev => [{
+        timestamp: new Date().toISOString(),
+        transactionId: id,
+        reference: `EMP: ${emp.name}`,
+        user: 'Admin Accountant',
+        reason: 'Employee Termination'
+      }, ...prev]);
+    }
+    setEmployees(prev => prev.filter(e => e.id !== id));
+  };
 
   const addPayrollEntry = (entry: PayrollEntry) => {
     setPayrollEntries(prev => [...prev, entry]);
@@ -204,13 +248,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const login = (email: string) => setUser({ id: 'u1', name: 'Admin Accountant', email, role: 'Admin', companyId: 'c1' });
   const logout = () => setUser(null);
 
+  const toggleTheme = useCallback(() => {
+    setTheme(prev => {
+      const next = prev === 'light' ? 'dark' : 'light';
+      localStorage.setItem('app_theme', next);
+      document.documentElement.classList.toggle('dark', next === 'dark');
+      return next;
+    });
+  }, []);
+
   return (
     <AppContext.Provider value={{
       accounts, transactions, invoices, bankEntries, employees, payrollEntries, company, user, auditLog,
       startDate, endDate, setStartDate, setEndDate,
-      setAccounts, addAccount, setTransactions, setInvoices, addTransaction, addTransactions, deleteTransaction, reverseTransaction,
+      setAccounts, addAccount, updateAccount, deleteAccount, setTransactions, setInvoices, addTransaction, addTransactions, deleteTransaction, reverseTransaction,
       addInvoice, addEmployee, deleteEmployee, addPayrollEntry, deletePayrollEntry, updateOpeningBalance, setBankEntries, updateBankEntry,
-      login, logout
+      login, logout, theme, toggleTheme
     }}>
       {children}
     </AppContext.Provider>

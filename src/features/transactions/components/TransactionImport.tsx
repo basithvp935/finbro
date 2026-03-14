@@ -2,8 +2,8 @@
 import React, { useState, useRef } from 'react';
 import { GoogleGenAI, Type } from "@google/genai";
 import * as XLSX from 'xlsx';
-import { useApp } from '../../store';
-import { Transaction, Account } from '../../types';
+import { useApp } from '../../../store';
+import { Transaction, Account } from '../../../types';
 
 interface TransactionImportProps {
   onClose: () => void;

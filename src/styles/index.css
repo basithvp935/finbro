@@ -4,8 +4,20 @@
 
 @layer base {
   body {
-    @apply antialiased text-slate-900 bg-slate-50;
+    @apply antialiased text-slate-900 bg-slate-50 transition-colors duration-300;
   }
+  .dark body {
+    @apply text-slate-100 bg-slate-950;
+  }
+}
+
+/* Custom Scrollbar for Dark Mode */
+.dark .custom-scrollbar::-webkit-scrollbar-track {
+  @apply bg-slate-900;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-slate-800 border-slate-900;
 }
 
 /* Premium Date Picker Styling Overrides */
@@ -35,4 +47,31 @@ input[type="date"]::-webkit-datetime-edit-year-field {
 input[type="date"]::-webkit-inner-spin-button,
 input[type="date"]::-webkit-clear-button {
   display: none;
+}
+
+/* Premium Scrollbar Styling */
+.premium-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.premium-scrollbar::-webkit-scrollbar {
+  height: 4px;
+  width: 4px;
+}
+
+.premium-scrollbar::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+.premium-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-slate-200 dark:bg-slate-800 rounded-full transition-colors;
+}
+
+.premium-scrollbar:hover::-webkit-scrollbar-thumb {
+  @apply bg-indigo-300 dark:bg-indigo-500/50;
+}
+
+.dark .premium-scrollbar {
+  scrollbar-color: #1e293b transparent;
 }
