@@ -195,18 +195,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const addInvoice = (inv: Invoice) => {
     setInvoices(prev => [...prev, inv]);
-    addTransaction({
-      id: `tx-${inv.id}`,
-      date: inv.date,
-      description: `Invoice Service #${inv.invoiceNumber}`,
-      type: 'Invoice',
-      status: 'Posted',
-      lines: [
-        { accountId: '1002', debit: inv.total, credit: 0 },
-        { accountId: '4001', debit: 0, credit: inv.total }
-      ]
-    });
   };
+
 
   const addEmployee = (emp: Employee) => setEmployees(prev => [...prev, emp]);
   const deleteEmployee = (id: string) => {

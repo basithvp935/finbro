@@ -70,8 +70,8 @@ const AIDashboardInsights: React.FC<AIDashboardInsightsProps> = ({
     };
 
     return (
-        <div className="bg-white p-10 rounded-[48px] border border-indigo-100 shadow-xl overflow-hidden relative group">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50/50 rounded-full blur-[100px] -mr-32 -mt-32 transition-all group-hover:bg-indigo-100/50"></div>
+        <div className="bg-white dark:bg-slate-900 p-10 rounded-[48px] border border-indigo-100 dark:border-white/10 shadow-xl overflow-hidden relative group">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50/50 dark:bg-indigo-500/10 rounded-full blur-[100px] -mr-32 -mt-32 transition-all group-hover:bg-indigo-100/50 dark:group-hover:bg-indigo-500/20"></div>
 
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 mb-10 relative z-10">
                 <div>
@@ -79,15 +79,17 @@ const AIDashboardInsights: React.FC<AIDashboardInsightsProps> = ({
                         <div className="w-8 h-8 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-600/20">
                             <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                         </div>
-                        <h3 className="text-xl font-black text-slate-900 italic uppercase tracking-tight">AI Strategic Insights</h3>
+                        <h3 className="text-xl font-black text-slate-900 dark:text-white italic uppercase tracking-tight">AI Strategic Insights</h3>
                     </div>
-                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest pl-11">Powered by Gemini Executive Intelligence</p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-widest pl-11">Powered by Gemini Executive Intelligence</p>
                 </div>
 
                 <button
                     onClick={generateAnalyze}
                     disabled={isAnalyzing}
-                    className={`px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-xl active:scale-95 ${isAnalyzing ? 'bg-slate-100 text-slate-400' : 'bg-slate-900 text-white hover:bg-black hover:shadow-indigo-500/10'
+                    className={`px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-xl active:scale-95 ${isAnalyzing 
+                        ? 'bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-slate-600' 
+                        : 'bg-slate-900 dark:bg-indigo-600 text-white hover:bg-black dark:hover:bg-indigo-700 hover:shadow-indigo-500/10'
                         }`}
                 >
                     {isAnalyzing ? (
@@ -99,18 +101,18 @@ const AIDashboardInsights: React.FC<AIDashboardInsightsProps> = ({
                 </button>
             </div>
 
-            <div className="relative z-10 min-h-[120px] flex items-center justify-center bg-slate-50/50 rounded-[32px] border border-slate-100 p-8">
+            <div className="relative z-10 min-h-[120px] flex items-center justify-center bg-slate-50/50 dark:bg-white/5 rounded-[32px] border border-slate-100 dark:border-white/5 p-8">
                 {isAnalyzing ? (
                     <div className="flex flex-col items-center space-y-4 animate-pulse">
-                        <div className="h-2 w-48 bg-slate-200 rounded-full"></div>
-                        <div className="h-2 w-64 bg-slate-200 rounded-full opacity-60"></div>
+                        <div className="h-2 w-48 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+                        <div className="h-2 w-64 bg-slate-200 dark:bg-slate-700 rounded-full opacity-60"></div>
                     </div>
                 ) : insights.length > 0 ? (
                     <div className="w-full space-y-6">
                         {insights.map((point, i) => (
                             <div key={i} className="flex items-start space-x-6 group/item animate-in slide-in-from-left-4 duration-500" style={{ animationDelay: `${i * 150}ms` }}>
                                 <div className="mt-1.5 w-2 h-2 rounded-full bg-indigo-500 shrink-0 shadow-lg shadow-indigo-500/40 transition-transform group-hover/item:scale-150"></div>
-                                <p className="text-sm font-bold text-slate-700 leading-relaxed italic uppercase tracking-tight group-hover/item:text-slate-900 transition-colors">
+                                <p className="text-sm font-bold text-slate-700 dark:text-slate-300 leading-relaxed italic uppercase tracking-tight group-hover/item:text-slate-900 dark:group-hover/item:text-white transition-colors">
                                     {point}
                                 </p>
                             </div>
@@ -118,13 +120,13 @@ const AIDashboardInsights: React.FC<AIDashboardInsightsProps> = ({
                     </div>
                 ) : error ? (
                     <div className="text-center py-6 px-10">
-                        <p className="text-rose-500 font-black uppercase text-[10px] tracking-widest bg-rose-50 px-6 py-3 rounded-2xl border border-rose-100 shadow-sm leading-relaxed">
+                        <p className="text-rose-500 font-black uppercase text-[10px] tracking-widest bg-rose-50 dark:bg-rose-500/10 px-6 py-3 rounded-2xl border border-rose-100 dark:border-rose-500/20 shadow-sm leading-relaxed">
                             {error}
                         </p>
                     </div>
                 ) : (
                     <div className="text-center py-6">
-                        <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] italic">Click generate to analyze current performance vectors</p>
+                        <p className="text-[10px] font-black text-slate-300 dark:text-slate-700 uppercase tracking-[0.3em] italic">Click generate to analyze current performance vectors</p>
                     </div>
                 )}
             </div>

@@ -59,17 +59,20 @@ const TransactionsList: React.FC = () => {
   };
 
   const exportToCSV = () => {
-    const headers = ['Date', 'Reference', 'Narrative', 'Account', 'Debit', 'Credit'];
+    const headers = ['Date', 'Reference', 'Narrative', 'Remarks', 'Account', 'Line Remarks', 'Debit', 'Credit'];
     const rows = filteredTransactions.flatMap(tx =>
       tx.lines.map((line, idx) => [
         idx === 0 ? tx.date : '',
         idx === 0 ? tx.reference : '',
         idx === 0 ? tx.description : '',
+        idx === 0 ? (tx.remarks || '') : '',
         getAccountName(line.accountId),
+        line.remarks || '',
         line.debit || '',
         line.credit || ''
       ])
     );
+
 
     const csvContent = [headers, ...rows].map(e => e.map(v => `"${v}"`).join(",")).join("\n");
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -90,11 +93,14 @@ const TransactionsList: React.FC = () => {
         'Date': idx === 0 ? tx.date : '',
         'Reference': idx === 0 ? tx.reference : '',
         'Narrative': idx === 0 ? tx.description : '',
+        'Remarks': idx === 0 ? (tx.remarks || '') : '',
         'Account': getAccountName(line.accountId),
+        'Line Remarks': line.remarks || '',
         'Debit': line.debit || 0,
         'Credit': line.credit || 0
       }))
     );
+
 
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
@@ -108,13 +114,14 @@ const TransactionsList: React.FC = () => {
     const tableData = filteredTransactions.flatMap(tx =>
       tx.lines.map((line, idx) => [
         idx === 0 ? tx.date : '',
-        idx === 0 ? tx.reference : '',
-        idx === 0 ? tx.description : '',
-        getAccountName(line.accountId),
+        idx === 0 ? (tx.reference || tx.id.slice(-6)) : '',
+        idx === 0 ? tx.description + (tx.remarks ? `\nNote: ${tx.remarks}` : '') : '',
+        getAccountName(line.accountId) + (line.remarks ? `\n(${line.remarks})` : ''),
         line.debit ? `₹${line.debit.toLocaleString()}` : '',
         line.credit ? `₹${line.credit.toLocaleString()}` : ''
       ])
     );
+
 
     (doc as any).autoTable({
       head: [['Date', 'Reference', 'Narrative', 'Account', 'Debit', 'Credit']],
@@ -261,11 +268,20 @@ const TransactionsList: React.FC = () => {
                           )}
                         </td>
                         <td className="px-10 py-4 text-xs font-black text-slate-900 dark:text-white truncate max-w-[200px] uppercase italic tracking-tight">
-                          {idx === 0 ? tx.description : ''}
+                          {idx === 0 ? (
+                            <div className="flex flex-col">
+                              <span>{tx.description}</span>
+                              {tx.remarks && <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 normal-case italic mt-1 font-serif tracking-normal">"{tx.remarks}"</span>}
+                            </div>
+                          ) : ''}
                         </td>
                         <td className={`px-10 py-4 text-xs ${line.credit > 0 ? 'pl-20 text-slate-500 dark:text-slate-400 italic' : 'font-black text-slate-800 dark:text-slate-200 uppercase tracking-tight'}`}>
-                          {getAccountName(line.accountId)}
+                          <div className="flex flex-col">
+                            <span>{getAccountName(line.accountId)}</span>
+                            {line.remarks && <span className="text-[10px] font-bold text-indigo-500/60 dark:text-indigo-400/40 normal-case italic mt-0.5 tracking-normal">↳ {line.remarks}</span>}
+                          </div>
                         </td>
+
                         <td className="px-10 py-4 text-right text-sm tabular-nums font-black text-emerald-600">
                           {line.debit > 0 ? `₹${line.debit.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : ''}
                         </td>
@@ -336,9 +352,13 @@ const TransactionsList: React.FC = () => {
               <div className="space-y-2 pt-2 border-t border-slate-50 dark:border-white/5">
                 {tx.lines.map((line, lIdx) => (
                   <div key={lIdx} className="flex items-center justify-between text-[11px]">
-                    <span className={`truncate max-w-[180px] ${line.credit > 0 ? 'text-slate-500 pl-4 italic' : 'font-black text-slate-800 dark:text-slate-200 uppercase'}`}>
-                      {getAccountName(line.accountId)}
-                    </span>
+                    <div className="flex flex-col">
+                      <span className={`truncate max-w-[180px] ${line.credit > 0 ? 'text-slate-500 pl-4 italic' : 'font-black text-slate-800 dark:text-slate-200 uppercase'}`}>
+                        {getAccountName(line.accountId)}
+                      </span>
+                      {line.remarks && <span className="text-[9px] font-bold text-indigo-400/60 italic lowercase ml-4">↳ {line.remarks}</span>}
+                    </div>
+
                     <span className={`font-black tabular-nums ${line.debit > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                       ₹{(line.debit || line.credit).toLocaleString('en-IN')}
                     </span>

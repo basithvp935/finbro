@@ -6,6 +6,7 @@ import { Invoice, InvoiceLineItem } from '../../../types';
 import CustomDatePicker from '../../../components/ui/CustomDatePicker';
 import PremiumSelect from '../../../components/ui/PremiumSelect';
 import PremiumDropdown from '../../../components/ui/PremiumDropdown';
+import PremiumModal from '../../../components/ui/PremiumModal';
 
 type TabType = 'details' | 'items' | 'payments';
 
@@ -21,6 +22,7 @@ const Invoicing: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('details');
   const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
+  const [isTransmitting, setIsTransmitting] = useState(false);
 
   // Details Tab State
   const [invoiceType, setInvoiceType] = useState('Invoice');
@@ -36,6 +38,32 @@ const Invoicing: React.FC = () => {
   // Payments Tab State
   const [currentPayment, setCurrentPayment] = useState({ amount: 0, date: '', method: 'Bank' as const });
   const [payments, setPayments] = useState<PaymentLine[]>([]);
+
+  // Modal State
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'alert' | 'confirm' | 'success' | 'error';
+    onConfirm?: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'alert'
+  });
+
+  const [modalData, setModalData] = useState<{
+    amount?: number;
+    client?: string;
+    reference?: string;
+    date?: string;
+  } | undefined>(undefined);
+
+  const showAlert = (title: string, message: string, type: 'alert' | 'success' | 'error' = 'alert', data?: typeof modalData) => {
+    setModalData(data);
+    setModalConfig({ isOpen: true, title, message, type, onConfirm: undefined });
+  };
 
   // Automatic Numbering Logic
   useEffect(() => {
@@ -81,8 +109,8 @@ const Invoicing: React.FC = () => {
 
   const handleCreateInvoice = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!clientName) return alert('Please enter client name');
-    if (items.length === 0) return alert('Please add at least one item');
+    if (!clientName) return showAlert('Validation Error', 'Please enter client name', 'error');
+    if (items.length === 0) return showAlert('Missing Data', 'Please add at least one item', 'error');
 
     const inv: Invoice = {
       id: `inv-${Date.now()}`,
@@ -98,31 +126,48 @@ const Invoicing: React.FC = () => {
       total: subtotal,
     };
 
-    addInvoice(inv);
+    setIsTransmitting(true);
 
-    // If payments exist, record the ledger entries for them
-    payments.forEach(p => {
-      addTransaction({
-        id: `tx-pay-${p.id}`,
-        date: p.date,
-        description: `Payment for Invoice #${inv.invoiceNumber}`,
-        reference: inv.invoiceNumber,
-        type: 'Payment',
-        status: 'Posted',
-        lines: [
-          { accountId: '1001', debit: p.amount, credit: 0 }, // Bank Dr
-          { accountId: '1002', debit: 0, credit: p.amount }, // Debtors Cr
-        ]
+    // Simulated Cinematic Transmission Protocol
+    setTimeout(() => {
+      addInvoice(inv);
+      
+      // If payments exist, record the ledger entries for them
+      payments.forEach(p => {
+        addTransaction({
+          id: `tx-pay-${p.id}`,
+          date: p.date,
+          description: `Payment for Invoice #${inv.invoiceNumber}`,
+          reference: inv.invoiceNumber,
+          type: 'Payment',
+          status: 'Posted',
+          lines: [
+            { accountId: '1001', debit: p.amount, credit: 0 }, // Bank Dr
+            { accountId: '1002', debit: 0, credit: p.amount }, // Debtors Cr
+          ]
+        });
       });
-    });
 
-    // Reset and close
-    setShowForm(false);
-    setActiveTab('details');
-    setItems([]);
-    setPayments([]);
-    setClientName('');
-    setClientWebsite('');
+      setIsTransmitting(false);
+      setShowForm(false);
+      setActiveTab('details');
+      setItems([]);
+      setPayments([]);
+      setClientName('');
+      setClientWebsite('');
+      
+      showAlert(
+        "Transmission Successful", 
+        "Intelligence Protocol confirmed. Transaction successfully committed to the global ledger.", 
+        "success",
+        {
+          amount: inv.total,
+          client: inv.clientName,
+          reference: inv.invoiceNumber,
+          date: inv.date
+        }
+      );
+    }, 1500);
   };
 
   return (
@@ -145,13 +190,35 @@ const Invoicing: React.FC = () => {
 
       {/* Modern Multi-Tab Invoice Form Modal */}
       {showForm && createPortal(
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-[1000] p-4 lg:p-6">
-          <div className="bg-[#f8f9ff] dark:bg-slate-900 rounded-[32px] shadow-2xl w-full max-w-4xl overflow-hidden animate-in fade-in zoom-in-95 duration-500 flex flex-col border border-white/20 dark:border-white/5">
+        <div className="fixed inset-0 bg-slate-950/40 dark:bg-black/80 backdrop-blur-[20px] flex items-center justify-center z-[1000] p-4 lg:p-6 animate-in fade-in duration-700">
+          <div className="bg-white/80 dark:bg-slate-950/80 backdrop-blur-[40px] rounded-[64px] shadow-[0_80px_160px_-30px_rgba(0,0,0,0.7)] w-full max-w-4xl overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-20 duration-1000 flex flex-col border border-white/40 dark:border-white/10 relative">
+            {/* Holographic Background Elements */}
+            <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
+            <div className="absolute -top-32 -right-32 w-80 h-80 bg-gradient-to-br from-indigo-500/20 to-purple-500/0 rounded-full blur-[100px] animate-pulse"></div>
+            <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-gradient-to-tr from-indigo-500/20 to-blue-500/0 rounded-full blur-[100px] opacity-40 animate-pulse"></div>
+            
+            {/* Transmission Shield Holographic Overlay */}
+            {isTransmitting && (
+              <div className="absolute inset-0 z-[1001] bg-slate-950/60 backdrop-blur-[4px] flex flex-col items-center justify-center animate-in fade-in duration-500">
+                <div className="relative">
+                   <div className="absolute inset-0 bg-indigo-500/30 rounded-full blur-3xl animate-pulse"></div>
+                   <div className="relative w-40 h-40 border-2 border-indigo-500/30 rounded-full flex items-center justify-center">
+                     <div className="w-32 h-32 border-t-2 border-indigo-500 rounded-full animate-spin"></div>
+                     <div className="absolute inset-0 bg-gradient-to-b from-transparent via-indigo-500/10 to-transparent h-[200%] -top-full animate-[scanline_4s_linear_infinite] pointer-events-none rounded-full"></div>
+                   </div>
+                </div>
+                <p className="mt-10 text-[12px] font-black text-white uppercase tracking-[0.5em] animate-pulse italic">Synchronizing Logic Ledger...</p>
+              </div>
+            )}
+
             {/* Modal Header */}
-            <div className="px-8 pt-8 pb-3 flex items-center justify-between">
-              <div className="space-y-0.5">
-                <h2 className="text-2xl font-black text-slate-900 dark:text-white italic tracking-tighter uppercase leading-none">Draft Protocol</h2>
-                <p className="text-[9px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">Create New Billing Record</p>
+            <div className="px-10 pt-10 pb-4 flex items-center justify-between relative z-10">
+              <div className="space-y-1">
+                <h2 className="text-3xl font-black text-slate-900 dark:text-white italic tracking-tighter uppercase leading-none">Draft Protocol</h2>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></div>
+                  <p className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">Architecting New Billing Record</p>
+                </div>
               </div>
               <button
                 onClick={() => setShowForm(false)}
@@ -162,14 +229,14 @@ const Invoicing: React.FC = () => {
             </div>
 
             {/* Tabs Navigation */}
-            <div className="px-6 lg:px-8 mt-4 overflow-x-auto no-scrollbar">
-              <div className="flex bg-slate-100 dark:bg-white/5 p-1 rounded-xl lg:rounded-[20px] w-fit sm:w-full">
+            <div className="px-10 mt-6 relative z-10 overflow-x-auto no-scrollbar">
+              <div className="flex bg-slate-100/50 dark:bg-white/5 p-1.5 rounded-[24px] w-fit sm:w-full border border-white/20 dark:border-white/5 shadow-inner">
                 {(['details', 'items', 'payments'] as const).map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`flex-1 min-w-[100px] sm:min-w-0 px-4 lg:px-6 py-2.5 rounded-lg lg:rounded-[14px] text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === tab 
-                      ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm' 
+                    className={`flex-1 min-w-[100px] sm:min-w-0 px-6 py-3 rounded-[18px] text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab 
+                      ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xl shadow-indigo-500/10' 
                       : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
                     }`}
                   >
@@ -180,7 +247,7 @@ const Invoicing: React.FC = () => {
             </div>
 
             {/* Modal Content - Dynamic Tabs */}
-            <div className="flex-1 p-8 overflow-y-auto min-h-[300px]">
+            <div className="flex-1 p-10 overflow-y-auto min-h-[350px] relative z-10 no-scrollbar">
               {activeTab === 'details' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in duration-300">
                   <div className="space-y-2">
@@ -382,23 +449,31 @@ const Invoicing: React.FC = () => {
             </div>
 
             {/* Modal Footer */}
-            <div className="px-8 py-6 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border-t border-slate-100 dark:border-white/5 flex justify-between items-center gap-4">
-               <div className="flex items-center space-x-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></div>
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Awaiting Transmission</span>
+            <div className="px-10 py-8 bg-white/30 dark:bg-slate-900/40 backdrop-blur-md border-t border-white/20 dark:border-white/5 flex justify-between items-center gap-4 relative z-10">
+               <div className="flex items-center space-x-4">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-indigo-500/10 rounded-full border border-indigo-500/20">
+                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></div>
+                    <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest whitespace-nowrap italic">Awaiting Transmission</span>
+                  </div>
                </div>
-               <div className="flex items-center gap-3">
+               <div className="flex items-center gap-4">
                   <button
                     onClick={() => setShowForm(false)}
-                    className="px-8 py-3 rounded-xl font-black text-[9px] uppercase tracking-widest text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 transition-all border border-slate-100 dark:border-white/5"
+                    className="px-10 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-400 hover:bg-slate-900 dark:hover:bg-white hover:text-white dark:hover:text-slate-900 transition-all border border-slate-200 dark:border-white/10 active:scale-95"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleCreateInvoice}
-                    className="px-8 py-3 bg-slate-900 dark:bg-indigo-600 hover:bg-black dark:hover:bg-indigo-700 text-white rounded-xl font-black text-[9px] uppercase tracking-widest shadow-xl shadow-slate-900/20 dark:shadow-indigo-500/20 transition-all transform active:scale-95"
+                    disabled={isTransmitting}
+                    className={`relative overflow-hidden px-14 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-2xl transition-all transform active:scale-95 flex items-center gap-3 min-w-[180px] justify-center ${isTransmitting ? 'bg-slate-800 text-indigo-400 cursor-not-allowed border border-indigo-500/20' : 'bg-slate-900 dark:bg-indigo-600 hover:bg-black dark:hover:bg-indigo-500 text-white shadow-slate-900/40 dark:shadow-indigo-500/40 border border-white/10'}`}
                   >
-                    Transmit
+                    {isTransmitting && (
+                      <div className="absolute inset-x-0 bottom-0 h-1 bg-indigo-500 animate-progress z-0"></div>
+                    )}
+                    <span className="relative z-10">
+                      {isTransmitting ? "Syncing..." : "Transmit Protocol"}
+                    </span>
                   </button>
                </div>
             </div>
@@ -406,6 +481,16 @@ const Invoicing: React.FC = () => {
         </div>,
         document.body
       )}
+
+      <PremiumModal
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={modalConfig.onConfirm}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+        data={modalData}
+      />
 
       {/* Invoice Preview Modal */}
       {previewInvoice && createPortal(

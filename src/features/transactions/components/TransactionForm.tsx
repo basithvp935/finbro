@@ -14,19 +14,23 @@ const TransactionForm: React.FC<{ onClose: () => void; initialMode?: EntryMode }
 
   const [mode, setMode] = useState<EntryMode>(initialMode);
   const [description, setDescription] = useState('');
+  const [remarks, setRemarks] = useState('');
   const [reference, setReference] = useState('');
+
   const [date, setDate] = useState(new Date().toLocaleDateString('en-CA')); // YYYY-MM-DD in local time
   const [attachments, setAttachments] = useState<Attachment[]>([]);
 
-  const [journalLines, setJournalLines] = useState<{ accountId: string; side: 'Dr' | 'Cr'; amount: string; receipt: string; }[]>([
-    { accountId: '', side: 'Dr', amount: '', receipt: '' },
-    { accountId: '', side: 'Cr', amount: '', receipt: '' },
+  const [journalLines, setJournalLines] = useState<{ accountId: string; side: 'Dr' | 'Cr'; amount: string; receipt: string; remarks: string; }[]>([
+    { accountId: '', side: 'Dr', amount: '', receipt: '', remarks: '' },
+    { accountId: '', side: 'Cr', amount: '', receipt: '', remarks: '' },
   ]);
 
+
   const [bankAccountId, setBankAccountId] = useState('1001'); // Default to BANK (id: 1001)
-  const [guidedLines, setGuidedLines] = useState<{ accountId: string; amount: string; receipt: string; }[]>([
-    { accountId: '', amount: '', receipt: '' }
+  const [guidedLines, setGuidedLines] = useState<{ accountId: string; amount: string; receipt: string; remarks: string; }[]>([
+    { accountId: '', amount: '', receipt: '', remarks: '' }
   ]);
+
 
   const [lineToDelete, setLineToDelete] = useState<{ type: 'Journal' | 'Guided'; index: number } | null>(null);
 
@@ -89,6 +93,7 @@ const TransactionForm: React.FC<{ onClose: () => void; initialMode?: EntryMode }
 
   const isBalanced = totals.dr > 0 && Math.abs(totals.dr - totals.cr) < 0.01;
 
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
@@ -111,44 +116,50 @@ const TransactionForm: React.FC<{ onClose: () => void; initialMode?: EntryMode }
     e.preventDefault();
     if (!isBalanced) return;
 
+
     let finalLines: JournalEntryLine[] = [];
     if (mode === 'Journal') {
       finalLines = journalLines.filter(l => l.accountId && parseFloat(l.amount) > 0).map(l => ({
         accountId: l.accountId,
         debit: l.side === 'Dr' ? parseFloat(l.amount) : 0,
         credit: l.side === 'Cr' ? parseFloat(l.amount) : 0,
-        receipt: l.receipt
+        receipt: l.receipt,
+        remarks: l.remarks
       }));
     } else if (mode === 'Receipt') {
       if (bankAccountId) {
-        finalLines.push({ accountId: bankAccountId, debit: totals.dr, credit: 0 });
+        finalLines.push({ accountId: bankAccountId, debit: totals.dr, credit: 0, remarks: remarks });
       }
       guidedLines.forEach(l => {
         if (l.accountId && parseFloat(l.amount) > 0)
-          finalLines.push({ accountId: l.accountId, debit: 0, credit: parseFloat(l.amount), receipt: l.receipt });
+          finalLines.push({ accountId: l.accountId, debit: 0, credit: parseFloat(l.amount), receipt: l.receipt, remarks: l.remarks });
       });
     } else if (mode === 'Payment') {
       guidedLines.forEach(l => {
         if (l.accountId && parseFloat(l.amount) > 0)
-          finalLines.push({ accountId: l.accountId, debit: parseFloat(l.amount), credit: 0, receipt: l.receipt });
+          finalLines.push({ accountId: l.accountId, debit: parseFloat(l.amount), credit: 0, receipt: l.receipt, remarks: l.remarks });
       });
       if (bankAccountId) {
-        finalLines.push({ accountId: bankAccountId, debit: 0, credit: totals.cr });
+        finalLines.push({ accountId: bankAccountId, debit: 0, credit: totals.cr, remarks: remarks });
       }
     }
+
 
     addTransaction({
       id: `tx-${Date.now()}`,
       date,
       description: description || `${mode} Entry`,
+      remarks: remarks,
       reference: reference,
       lines: finalLines,
       type: mode === 'Journal' ? 'General' : (mode as any),
       status: 'Posted',
       attachments: attachments.length > 0 ? attachments : undefined
     });
+
     onClose();
   };
+
 
   const renderGuidedLines = () => (
     <div className="space-y-4">
@@ -167,7 +178,7 @@ const TransactionForm: React.FC<{ onClose: () => void; initialMode?: EntryMode }
               placeholder={`Select ${mode === 'Payment' ? 'Expense' : 'Income'} Account...`}
             />
           </div>
-          <div className="w-full lg:col-span-5">
+          <div className="w-full lg:col-span-3">
             <label className="lg:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Value</label>
             <input 
               type="number" 
@@ -178,6 +189,17 @@ const TransactionForm: React.FC<{ onClose: () => void; initialMode?: EntryMode }
               className="w-full bg-slate-50 dark:bg-white/5 border-2 border-transparent hover:border-slate-200 dark:hover:border-white/10 rounded-[20px] p-4 text-right font-black text-slate-900 dark:text-white outline-none transition-all placeholder:text-slate-200 dark:placeholder:text-slate-700" 
             />
           </div>
+          <div className="w-full lg:col-span-2">
+            <label className="lg:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Remarks</label>
+            <input 
+              type="text" 
+              value={line.remarks} 
+              onChange={e => { const nl = [...guidedLines]; nl[idx].remarks = e.target.value; setGuidedLines(nl); }} 
+              placeholder="Optional notes..." 
+              className="w-full bg-slate-50 dark:bg-white/5 border-2 border-transparent hover:border-slate-200 dark:hover:border-white/10 rounded-[20px] p-4 font-black text-slate-900 dark:text-white outline-none transition-all placeholder:text-slate-200 dark:placeholder:text-slate-700" 
+            />
+          </div>
+
           <div className="absolute top-2 right-2 lg:relative lg:top-0 lg:right-0 lg:col-span-2 text-center">
             <button type="button" onClick={() => setLineToDelete({ type: 'Guided', index: idx })} className="text-slate-200 hover:text-rose-500 p-2 transition-colors">✕</button>
           </div>
@@ -277,6 +299,19 @@ const TransactionForm: React.FC<{ onClose: () => void; initialMode?: EntryMode }
           </div>
         </div>
 
+        {/* Global Remarks */}
+        <div className="space-y-3">
+          <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest block">General Remarks</label>
+          <input 
+            type="text" 
+            value={remarks} 
+            onChange={e => setRemarks(e.target.value)} 
+            placeholder="Additional internal notes or comments..." 
+            className="w-full h-[76px] bg-white dark:bg-slate-800 border border-slate-100 dark:border-white/5 rounded-[24px] p-6 font-black text-slate-800 dark:text-white focus:ring-8 focus:ring-indigo-500/10 transition-all outline-none placeholder:text-slate-200 dark:placeholder:text-slate-700 font-italic" 
+          />
+        </div>
+
+
         {mode === 'Receipt' && (
           <div className="space-y-10 animate-in slide-in-from-top-4 duration-500">
             {renderBankSection('Debit')}
@@ -319,7 +354,7 @@ const TransactionForm: React.FC<{ onClose: () => void; initialMode?: EntryMode }
                     ))}
                   </div>
                 </div>
-                <div className="w-full lg:col-span-4">
+                <div className="w-full lg:col-span-2">
                   <label className="lg:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Value (INR)</label>
                   <input 
                     type="number" 
@@ -330,6 +365,17 @@ const TransactionForm: React.FC<{ onClose: () => void; initialMode?: EntryMode }
                     className="w-full bg-slate-50 dark:bg-white/5 border-2 border-transparent hover:border-slate-200 dark:hover:border-white/10 rounded-[20px] p-4 text-right font-black text-slate-900 dark:text-white outline-none transition-all focus:bg-white dark:focus:bg-slate-700 placeholder:text-slate-200 dark:placeholder:text-slate-700" 
                   />
                 </div>
+                <div className="w-full lg:col-span-2">
+                  <label className="lg:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Line Remarks</label>
+                  <input 
+                    type="text" 
+                    value={line.remarks} 
+                    onChange={e => { const nl = [...journalLines]; nl[idx].remarks = e.target.value; setJournalLines(nl); }} 
+                    placeholder="Notes..." 
+                    className="w-full bg-slate-50 dark:bg-white/5 border-2 border-transparent hover:border-slate-200 dark:hover:border-white/10 rounded-[20px] p-4 font-black text-slate-900 dark:text-white outline-none transition-all focus:bg-white dark:focus:bg-slate-700 placeholder:text-slate-200 dark:placeholder:text-slate-700" 
+                  />
+                </div>
+
                 <div className="absolute top-4 right-4 lg:relative lg:top-0 lg:right-0 lg:col-span-1 text-center">
                   <button type="button" onClick={() => setLineToDelete({ type: 'Journal', index: idx })} className="text-slate-200 hover:text-rose-500 p-2 transition-colors">✕</button>
                 </div>
@@ -364,6 +410,7 @@ const TransactionForm: React.FC<{ onClose: () => void; initialMode?: EntryMode }
             <input type="file" multiple className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
           </div>
         </div>
+
       </form>
 
       {/* Persistence Bar */}
@@ -394,7 +441,7 @@ const TransactionForm: React.FC<{ onClose: () => void; initialMode?: EntryMode }
             </div>
           </div>
           
-          <div className="flex items-center space-x-4 lg:space-x-0">
+          <div className="flex items-center space-x-4 lg:space-x-8 w-full lg:w-auto shrink-0 justify-end">
             <div className={`px-5 py-2.5 rounded-2xl border-2 text-[10px] font-black uppercase tracking-widest flex items-center space-x-3 ${isBalanced ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-500/20' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-100 dark:border-rose-500/20'}`}>
               <div className={`w-2 h-2 rounded-full ${isBalanced ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></div>
               <span>{isBalanced ? 'Balanced' : 'Imbalance'}</span>
@@ -423,6 +470,7 @@ const TransactionForm: React.FC<{ onClose: () => void; initialMode?: EntryMode }
           </button>
         </div>
       </div>
+
 
       {/* Deletion Confirmation Modal */}
       {lineToDelete && createPortal(

@@ -198,15 +198,18 @@ const FinancialStatements: React.FC = () => {
                     </div>
                   </div>
                 ))}
-                <div className="grid grid-cols-12 py-10 px-6 border-t-2 border-slate-900 dark:border-white bg-slate-50/50 dark:bg-white/5 mt-12 rounded-3xl">
-                  <div className="col-span-8 text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-widest">System Integrity Aggregate</div>
-                  <div className="col-span-2 text-right font-black tabular-nums text-xl text-emerald-600">
-                    {company.currency}{trialBalanceTotals.dr.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                <div className="grid grid-cols-12 py-10 px-6 border-t-2 border-slate-900 dark:border-white bg-slate-50/50 dark:bg-white/5 mt-12 rounded-3xl items-center">
+                  <div className="col-span-6 text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-widest">System Integrity Aggregate</div>
+                  <div className="col-span-3 text-right font-black tabular-nums text-xl text-emerald-600">
+                    <span className="text-xs uppercase mr-2 opacity-60">{company.currency}</span>
+                    {trialBalanceTotals.dr.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </div>
-                  <div className="col-span-2 text-right font-black tabular-nums text-xl text-emerald-600">
-                    {company.currency}{trialBalanceTotals.cr.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  <div className="col-span-3 text-right font-black tabular-nums text-xl text-emerald-600">
+                    <span className="text-xs uppercase mr-2 opacity-60">{company.currency}</span>
+                    {trialBalanceTotals.cr.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </div>
                 </div>
+
               </div>
             ) : (
               <>
