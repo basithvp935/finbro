@@ -149,6 +149,14 @@ const PayrollManagement: React.FC = () => {
     );
   };
 
+  const handleDeleteEmployee = (id: string, name: string) => {
+    showConfirm(
+      "Confirm Removal",
+      `Are you sure you want to remove ${name} from the Resource Directory? This action cannot be undone.`,
+      () => deleteEmployee(id)
+    );
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       {/* Top Banner */}
@@ -306,7 +314,7 @@ const PayrollManagement: React.FC = () => {
                     <div className="w-14 h-14 bg-indigo-50 dark:bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-2xl group-hover:bg-indigo-600 dark:group-hover:bg-indigo-500 group-hover:text-white transition-all">
                       {emp.name.charAt(0)}
                     </div>
-                    <button onClick={() => deleteEmployee(emp.id)} className="text-slate-200 dark:text-slate-700 hover:text-rose-500 dark:hover:text-rose-400 p-2 transition-colors">✕</button>
+                    <button onClick={() => handleDeleteEmployee(emp.id, emp.name)} className="text-slate-200 dark:text-slate-700 hover:text-rose-500 dark:hover:text-rose-400 p-2 transition-colors">✕</button>
                   </div>
                   <h4 className="text-xl font-black text-slate-900 dark:text-white italic uppercase tracking-tighter leading-none mb-2">{emp.name}</h4>
                   <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-6">{emp.designation}</p>
