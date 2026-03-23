@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { GoogleGenAI } from "@google/genai";
 
 interface AIDashboardInsightsProps {
     totalRevenue: number;
@@ -22,11 +21,11 @@ const AIDashboardInsights: React.FC<AIDashboardInsightsProps> = ({
         setIsAnalyzing(true);
         setError(null);
         try {
-            // Use the API key provided by the user and the library that is actually installed
-            const ai = new GoogleGenAI({ apiKey: "AIzaSyBo_TJfimv3-ykkwm8Nuj7WB9LqUi8yfq4" });
+            const API_KEY = (import.meta as any).env.VITE_GEMINI_API_KEY || "AIzaSyCbJmQ9htro7NpD2b6wvbYlvhxuT6V4BtY";
+            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
             const prompt = `
-        ACT AS A SENIOR STRATEGIC FINANCIAL ANALYST.
+        ACT AS A SENIOR STRATEGIC FINANCIAL ANALYST WITH A HIGHLY POSITIVE AND ENCOURAGING PERSONA.
         
         CONTEXT:
         Company Financial Summary for the period ${startDate} to ${endDate}.
@@ -38,32 +37,28 @@ const AIDashboardInsights: React.FC<AIDashboardInsightsProps> = ({
         - Bank Liquidity: ₹${bankBalance.toLocaleString('en-IN')}
         
         TASK:
-        Provide exactly 3-4 concise, high-impact strategic observations about the company's performance. 
-        Focus on:
-        1. Profitability status.
-        2. Burn rate / Expense management.
-        3. Cash flow health.
-        4. One specific actionable recommendation.
+        Provide exactly 3-4 concise, high-impact strategic observations. 
+        Focus on celebrating successes and highlighting growth opportunities.
         
         STYLE:
-        Professional, assertive, yet insightful. Use an authoritative tone. Return the results as a simple list of sentences, separated by newlines. No bolding or markdown symbols, just professional text.
+        Professional, extremely positive, and insightful. Return the results as a simple list of sentences, separated by newlines. No bolding or markdown symbols.
       `;
 
-            const response = await ai.models.generateContent({
-                model: "gemini-1.5-flash",
-                contents: prompt
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }]
+                })
             });
 
-            const text = response.text || "";
-            const points = text.split('\n').filter(p => p.trim().length > 10);
+            const data = await response.json();
+            const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+            const points = text.split('\n').filter((p: string) => p.trim().length > 10);
             setInsights(points);
         } catch (err: any) {
             console.error(err);
-            if (err.message?.includes('429')) {
-                setError("AI Quota Exceeded. Please try again in 30 seconds or upgrade your Gemini plan.");
-            } else {
-                setError(`AI Service Unavailable: ${err.message || "Unknown connectivity issue"}`);
-            }
+            setError(`AI Service Temporarily Unavailable. Please try again in a few moments.`);
         } finally {
             setIsAnalyzing(false);
         }

@@ -124,8 +124,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (savedTxs) setTransactions(JSON.parse(savedTxs));
     if (savedEmps) setEmployees(JSON.parse(savedEmps));
     if (savedPR) setPayrollEntries(JSON.parse(savedPR));
-
-    setUser({ id: 'u1', name: 'Admin Accountant', email: 'admin@codofin.com', role: 'Admin', companyId: 'c1' });
   }, []);
 
   useEffect(() => {
