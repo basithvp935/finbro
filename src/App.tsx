@@ -102,19 +102,20 @@ const Settings: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-6 lg:px-10 py-4 lg:py-6">
-                        <div className="flex items-center justify-end relative max-w-[150px] lg:max-w-[180px] ml-auto">
+                        <div className="flex items-center justify-end relative min-w-[120px] lg:min-w-[180px] ml-auto">
                           <span className="absolute left-4 text-slate-300 dark:text-slate-600 font-bold text-xs">₹</span>
                           <input 
+                            key={`ob-${acc.id}`}
                             type="number"
                             step="0.01"
                             defaultValue={acc.openingBalance || 0}
                             onBlur={(e) => updateOpeningBalance(acc.id, Number(e.target.value))}
-                            className="w-full bg-slate-50 dark:bg-white/5 border-2 border-transparent dark:border-white/5 rounded-xl lg:rounded-2xl py-3 lg:py-4 pl-10 pr-4 lg:pr-6 text-right font-black text-slate-900 dark:text-white group-hover:bg-white dark:group-hover:bg-slate-800 focus:bg-white dark:focus:bg-slate-800 focus:border-emerald-500 transition-all text-xs lg:text-base outline-none"
+                            className="w-full bg-slate-50 dark:bg-white/5 border-2 border-transparent dark:border-white/5 rounded-xl lg:rounded-2xl py-3 lg:py-4 pl-10 pr-4 lg:pr-6 text-right font-black text-slate-900 dark:text-white group-hover:bg-white dark:group-hover:bg-slate-800 focus:bg-white dark:focus:bg-slate-800 focus:border-emerald-500 transition-all text-xs lg:text-base outline-none shrink-0"
                           />
                         </div>
                       </td>
                       <td className="px-6 lg:px-10 py-4 lg:py-6 text-right">
-                        <p className="text-base lg:text-lg font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
+                        <p className="text-base lg:text-lg font-black text-emerald-600 dark:text-emerald-400 tabular-nums break-all leading-tight">
                           ₹{closing.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                         </p>
                       </td>

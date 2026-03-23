@@ -6,6 +6,7 @@ export interface DateRange {
   endDate: string;
 }
 
+
 export class AccountingEngine {
   /**
    * Calculates the current balance for every account in the chart of accounts
@@ -39,7 +40,7 @@ export class AccountingEngine {
 
     return accounts.map(acc => {
       const b = balances.get(acc.id)!;
-      const ob = acc.openingBalance || 0;
+      const ob = Number(acc.openingBalance) || 0;
 
       // Calculate the Net Balance based on the account's Normal Balance type
       const rawNet = acc.normalBalance === 'Debit'
