@@ -1,9 +1,8 @@
-
-const API_KEY = "AIzaSyBo_TJfimv3-ykkwm8Nuj7WB9LqUi8yfq4";
+const API_KEY = (import.meta as any).env.VITE_GEMINI_API_KEY || "AIzaSyCbJmQ9htro7NpD2b6wvbYlvhxuT6V4BtY";
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
 export interface SearchResult {
-    type: 'Account' | 'Transaction' | 'Invoice' | 'Employee' | 'Insight';
+    type: 'Account' | 'Transaction' | 'Invoice' | 'Employee' | 'Insight' | 'Feature' | 'History' | 'BankEntry' | 'Payroll';
     title: string;
     description: string;
     id?: string;
@@ -13,6 +12,11 @@ export interface SearchResult {
 
 export const GeminiService = {
     async search(query: string, store: any): Promise<SearchResult[]> {
+        if (!API_KEY) {
+            console.error("Gemini API Key missing");
+            return [];
+        }
+
         try {
             // Calculate some real-time metrics for context
             const totalCash = store.accounts
@@ -24,8 +28,25 @@ export const GeminiService = {
             const companyName = store.company?.name || 'Codofin Client';
             
             const prompt = `
-                You are a financial assistant for Codofin OS. 
-                Search through the following application data and answer the user query: "${query}".
+                You are a sophisticated financial intelligence assistant for Codofin OS. 
+                Answer the user query: "${query}" based ONLY on the provided application state.
+                
+                TONE AND STYLE (CHATGPT-STYLE):
+                - Maintain an EXTREMELY POSITIVE, ENCOURAGING, and highly intelligent persona. 
+                - Be detailed, professional, and celebrate the user's financial progress (e.g., "Excellent work on this revenue spike!" or "Your expenses are perfectly optimized!").
+                - Explain insights thoroughly, highlighting trends and opportunities.
+                
+                STRICT SCOPE POLICY:
+                - WHATEVER the user asks about this web application, its features, its data, or financial processes, you MUST provide a detailed, positive, and proactive response as the resident financial expert.
+                - If they ask HOW to do something (e.g., "how to add a client"), direct them to the appropriate section (e.g., "You can easily manage your clients and billing in the Invoicing section!").
+                - Only if the question is TOTALLY UNRELATED to this ecosystem (e.g., "What is the best pizza toppings?"), return a 'Registry Boundary' result stating your intelligence is currently specialized for their financial excellence here.
+
+                CRITICAL INSTRUCTIONS:
+                1. For ANY query about a feature or section (e.g., "Payroll", "Bank", "Invoices", "Cash", "Storage"), you MUST:
+                   - Return the corresponding 'Feature' result.
+                   - Provide a detailed 'Insight' summary of the current status of that area.
+                2. Be as DETAILED, helpful, and celebratory as ChatGPT.
+                3. Return a valid JSON array of SearchResult objects. Max 10.
                 
                 Environment:
                 - Company: ${companyName}
@@ -38,30 +59,21 @@ export const GeminiService = {
                 - Invoices: ${JSON.stringify(store.invoices.map((i: any) => ({ num: i.invoiceNumber, client: i.clientName, total: i.total, status: i.status })))}
                 - Employees: ${JSON.stringify(store.employees.map((e: any) => ({ name: e.name, role: e.role, salary: e.baseSalary })))}
                 - Payroll: ${JSON.stringify(store.payrollEntries.slice(0, 5).map((p: any) => ({ date: p.date, net: p.netAmount })))}
-                - Audit Log (History): ${JSON.stringify(store.auditLog.slice(0, 15).map((a: any) => ({ timestamp: a.timestamp, ref: a.reference, reason: a.reason, user: a.user })))}
-                - Navigation: ["Dashboard", "Transactions", "Accounts", "Reconciliation", "Invoicing", "Payroll", "Financial Statements", "Codo Storage", "CoA & Settings"]
-
-                Instructions:
-                1. If the user asks about a BROAD SECTION (e.g. "Accounts", "Payroll", "Invoices"), provide a comprehensive "Insight" result that summarizes the status of that entire section (e.g. list key accounts/balances, list recent invoices/totals).
-                2. If the user asks a SPECIFIC question (how much?, who?, what?), provide a direct "Insight" result with the exact answer in 'description'.
-                3. If the query matches a feature name, provide a "Feature" result with the correct 'tab'.
-                4. For "history" or "actions", use the Audit Log.
-                5. For specific records, return them as their respective types (Account, Transaction, etc.).
                 
-                Tab Mappings:
-                - Dashboard -> 'dashboard'
-                - Transactions -> 'transactions'
-                - Accounts -> 'accounts'
-                - Reconciliation -> 'reconciliation'
-                - Invoicing -> 'invoices'
-                - Payroll -> 'payroll'
-                - Financial Statements -> 'statements'
-                - Codo Storage -> 'create_file'
-                - CoA & Settings -> 'settings'
+                Tab Mappings (Label/Alias -> ID):
+                - Dashboard (Home, Overview) -> 'dashboard'
+                - Transactions (Journal, Ledger, Entries) -> 'transactions'
+                - Accounts (Chart of Accounts, CoA) -> 'accounts'
+                - Reconciliation (Bank Matching) -> 'reconciliation'
+                - Invoicing (Bills, Sales) -> 'invoices'
+                - Payroll (Salaries, HR) -> 'payroll'
+                - Financials (Statements, Reports, Trial Balance, P&L) -> 'statements'
+                - Codo Storage (Files, Documents) -> 'create_file'
+                - Settings (Configuration, Setup) -> 'settings'
 
-                Return ONLY a JSON array of SearchResult objects. Max 10 results.
+                Return ONLY a JSON array. 
                 interface SearchResult {
-                    type: 'Insight' | 'Feature' | 'Account' | 'Transaction' | 'Invoice' | 'Employee' | 'History';
+                    type: 'Insight' | 'Feature' | 'Account' | 'Transaction' | 'Invoice' | 'Employee' | 'History' | 'BankEntry' | 'Payroll';
                     title: string;
                     description: string;
                     tab?: string;
@@ -80,10 +92,11 @@ export const GeminiService = {
             const data = await response.json();
             const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
             
-            // Clean the response text to ensure it's valid JSON
-            const jsonMatch = text.match(/\[.*\]/s);
-            if (jsonMatch) {
-                return JSON.parse(jsonMatch[0]);
+            // Extract JSON array robustly
+            const start = text.indexOf('[');
+            const end = text.lastIndexOf(']') + 1;
+            if (start !== -1 && end !== -1) {
+                return JSON.parse(text.substring(start, end));
             }
             
             return [];
@@ -93,3 +106,4 @@ export const GeminiService = {
         }
     }
 };
+

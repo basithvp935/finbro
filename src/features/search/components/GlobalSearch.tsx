@@ -46,32 +46,96 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose, query, res
     return (
         <div 
             ref={containerRef}
-            className="absolute top-full mt-4 left-0 right-0 z-[100] bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl rounded-[32px] shadow-[0_32px_120px_-10px_rgba(0,0,0,0.3)] border border-slate-200/50 dark:border-white/10 overflow-hidden flex flex-col max-h-[550px] animate-in slide-in-from-top-4 fade-in duration-500 ring-1 ring-black/5"
+            className="absolute top-full mt-4 left-0 right-0 z-[200] bg-white/95 dark:bg-slate-900/95 backdrop-blur-3xl rounded-[32px] shadow-[0_48px_160px_-15px_rgba(0,0,0,0.5)] border border-slate-200/50 dark:border-white/10 overflow-hidden flex flex-col max-h-[550px] animate-in slide-in-from-top-4 fade-in duration-500 ring-1 ring-black/5"
             onClick={e => e.stopPropagation()}
         >
-            {/* Header (Optional, Simplified for Dropdown) */}
-            <div className="p-5 border-b border-slate-50 dark:border-white/5 flex items-center justify-between bg-slate-50/50 dark:bg-white/5">
-                <div className="flex items-center space-x-3">
-                    <div className={`w-2 h-2 rounded-full ${isLoading ? 'bg-indigo-500 animate-pulse' : 'bg-emerald-500'}`}></div>
-                    <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] italic">
-                        {isLoading ? 'Decrypting Application State...' : 'Intelligence Protocols Active'}
+            {/* Header (Intelligence Protocols) */}
+            <div className="p-4 border-b border-slate-50 dark:border-white/5 flex items-center justify-between bg-slate-50/50 dark:bg-white/5 gap-2">
+                <div className="flex items-center space-x-2 shrink-0">
+                    <div className={`w-2 h-2 rounded-full ${isLoading ? 'bg-indigo-500 animate-pulse' : 'bg-emerald-500 text-[10px]'}`}></div>
+                    <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest italic truncate hidden sm:block">
+                        {isLoading ? 'Decrypting...' : 'INTELLIGENCE'}
                     </p>
                 </div>
-                {isLoading && (
-                    <div className="flex items-center space-x-2">
-                        <span className="text-[9px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest animate-pulse">Syncing...</span>
-                        <div className="w-4 h-4 border-2 border-indigo-600 dark:border-indigo-400 border-t-transparent rounded-full animate-spin"></div>
-                    </div>
-                )}
+
+                <div className="flex items-center space-x-2 lg:space-x-3">
+                    <button 
+                        onClick={() => onSelect({ type: 'Feature', title: 'Intelligence Alpha', description: 'Resetting intelligence protocols...', tab: 'dashboard' })}
+                        className="group/new relative flex items-center space-x-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-800 text-white text-[10px] font-black uppercase tracking-widest hover:from-indigo-700 hover:to-indigo-900 transition-all shadow-xl shadow-indigo-500/30 active:scale-95 overflow-hidden"
+                    >
+                        <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/new:translate-y-0 transition-transform duration-500"></div>
+                        <span className="text-base group-hover/new:rotate-12 transition-transform">✨</span>
+                        <span>NEW CHAT</span>
+                    </button>
+
+                    <button 
+                        onClick={() => onSelect({ type: 'Feature', title: 'Registry Root', description: 'Returning to core view...', tab: 'dashboard' })}
+                        className="p-3 rounded-2xl bg-slate-50 dark:bg-white/5 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all border border-slate-200/50 dark:border-white/10 group/back relative active:scale-95"
+                        title="Back to Root"
+                    >
+                        <svg className="w-5 h-5 group-hover/back:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                    </button>
+
+                    <button 
+                        onClick={() => {
+                            const insight = results.find(r => r.type === 'Insight');
+                            if (!insight) return;
+                            const text = `REGISTRY INTELLIGENCE SCAN\nSource: Codofin OS AI\nDate: ${new Date().toLocaleString()}\n\n-- INSIGHT --\n${insight.description}`;
+                            const blob = new Blob([text], { type: 'text/plain' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `Registry_Insight_${Date.now()}.txt`;
+                            a.click();
+                            URL.revokeObjectURL(url);
+                        }}
+                        className={`flex items-center space-x-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-[10px] font-black uppercase tracking-widest hover:from-emerald-600 hover:to-teal-600 transition-all shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 active:scale-95 group/dl relative overflow-hidden ${results.some(r => r.type === 'Insight') ? 'animate-pulse' : 'opacity-30 cursor-not-allowed grayscale'}`}
+                        disabled={!results.some(r => r.type === 'Insight')}
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/dl:translate-x-full duration-1000 transition-transform"></div>
+                        <span className="text-base group-hover/dl:translate-y-0.5 transition-transform">⬇️</span>
+                        <span>DOWNLOAD</span>
+                    </button>
+
+                    {isLoading && (
+                        <div className="w-5 h-5 border-3 border-indigo-600 dark:border-indigo-400 border-t-transparent rounded-full animate-spin ml-2"></div>
+                    )}
+                </div>
             </div>
 
             {/* Results List */}
             <div className="flex-1 overflow-y-auto p-2 custom-scrollbar">
                 {results.length === 0 && !isLoading ? (
-                    <div className="py-20 text-center animate-in fade-in duration-1000">
-                        <div className="text-4xl mb-4 opacity-20">📡</div>
-                        <p className="text-[11px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.3em] font-mono">No intelligence matches detected.</p>
-                        <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-2 font-bold px-10 leading-relaxed uppercase opacity-50">Please refine your query parameters for broader registry scanning.</p>
+                    <div className="px-4 py-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                        <div className="mb-8 text-center">
+                            <div className="w-16 h-16 bg-indigo-600/10 rounded-[24px] flex items-center justify-center text-3xl mx-auto mb-4 border border-indigo-500/20 shadow-inner group-hover:scale-110 transition-transform">✨</div>
+                            <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase italic tracking-tight">Intelligence Readiness Active</h3>
+                            <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-2 font-bold uppercase tracking-widest opacity-60">How may I assist with your registry today?</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-2">
+                            <p className="text-[8px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-[0.3em] mb-2 ml-4">Recommended Vectors</p>
+                            {[
+                                { title: 'Financial Overview', desc: 'Generate a real-time status report of all accounts', tab: 'dashboard', icon: '📊' },
+                                { title: 'Recent Transactions', desc: 'Scan the latest journal entries and ledgers', tab: 'transactions', icon: '📝' },
+                                { title: 'Outstanding Invoices', desc: 'Audit pending payments and client balances', tab: 'invoices', icon: '📄' },
+                                { title: 'Payroll Analysis', desc: 'Review employee disbursements and salary trends', tab: 'payroll', icon: '💳' },
+                                { title: 'System Settings', desc: 'Configure Chart of Accounts and OS preferences', tab: 'settings', icon: '⚙️' }
+                            ].map((suggestion, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => onSelect({ type: 'Feature', title: suggestion.title, description: suggestion.desc, tab: suggestion.tab })}
+                                    className="flex items-center space-x-4 p-4 rounded-[20px] bg-slate-50/50 dark:bg-white/5 border border-transparent hover:border-indigo-500/30 hover:bg-white dark:hover:bg-slate-800 transition-all text-left group/suggestion"
+                                >
+                                    <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 flex items-center justify-center text-lg shadow-sm border border-slate-100 dark:border-white/5 group-hover/suggestion:scale-110 transition-transform">{suggestion.icon}</div>
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="text-[11px] font-black text-slate-800 dark:text-white uppercase italic tracking-tight">{suggestion.title}</h4>
+                                        <p className="text-[9px] text-slate-500 dark:text-slate-400 font-bold truncate opacity-70">{suggestion.desc}</p>
+                                    </div>
+                                    <div className="text-[8px] font-black text-indigo-500 opacity-0 group-hover/suggestion:opacity-100 transition-opacity">GO →</div>
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 ) : (
                     <div className="space-y-2 pb-2">

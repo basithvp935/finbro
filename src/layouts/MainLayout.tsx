@@ -61,14 +61,15 @@ const Layout: React.FC<LayoutProps> = ({ activeTab, onTabChange, canGoBack, onBa
     setIsSidebarOpen(false);
   };
 
-  const handleSearch = useCallback((query: string) => {
+    const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
+    setIsSearchOpen(true);
+    
     if (!query.trim()) {
-      setIsSearchOpen(false);
+      setIsSearching(false);
+      setSearchResults([]);
       return;
     }
-
-    setIsSearchOpen(true);
     setIsSearching(true);
 
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
@@ -77,7 +78,7 @@ const Layout: React.FC<LayoutProps> = ({ activeTab, onTabChange, canGoBack, onBa
       const results = await GeminiService.search(query, store);
       setSearchResults(results);
       setIsSearching(false);
-    }, 800);
+    }, 400);
   }, [store]);
 
   const handleSearchResultSelect = (result: SearchResult) => {
@@ -153,7 +154,7 @@ const Layout: React.FC<LayoutProps> = ({ activeTab, onTabChange, canGoBack, onBa
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden relative">
-        <header className="h-20 bg-white dark:bg-slate-900 border-b border-slate-200/50 dark:border-white/5 flex items-center justify-between px-6 lg:px-10 z-10 shrink-0 transition-colors duration-300">
+        <header className="h-20 bg-white dark:bg-slate-900 border-b border-slate-200/50 dark:border-white/5 flex items-center justify-between px-6 lg:px-10 z-50 relative shrink-0 transition-colors duration-300">
           <div className="flex items-center space-x-4 lg:space-x-8">
             <button 
               onClick={() => setIsSidebarOpen(true)}
@@ -191,9 +192,11 @@ const Layout: React.FC<LayoutProps> = ({ activeTab, onTabChange, canGoBack, onBa
                 <input 
                   type="text" 
                   value={searchQuery}
+                  onFocus={() => handleSearch(searchQuery)}
+                  onClick={() => handleSearch(searchQuery)}
                   onChange={(e) => handleSearch(e.target.value)}
                   placeholder="Registry Intelligence Scan..." 
-                  className="bg-white/40 dark:bg-white/5 backdrop-blur-md border-2 border-slate-200/30 dark:border-white/10 focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500 focus:ring-[12px] focus:ring-indigo-500/10 rounded-2xl pl-11 pr-5 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-500 w-24 sm:w-48 lg:w-72 xl:w-[480px] outline-none text-slate-900 dark:text-white placeholder:text-slate-400 shadow-sm focus:shadow-[0_0_40px_-10px_rgba(79,70,229,0.3)]"
+                  className="bg-white/40 dark:bg-white/5 backdrop-blur-md border-2 border-slate-200/30 dark:border-white/10 focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500 focus:ring-[12px] focus:ring-indigo-500/10 rounded-2xl pl-11 pr-5 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-500 w-24 sm:w-48 lg:w-72 xl:w-[480px] outline-none text-slate-900 dark:text-white placeholder:text-slate-400 shadow-sm focus:shadow-[0_0_40px_-10px_rgba(79,70,229,0.3)] active:scale-[0.98] focus:scale-[1.02]"
                 />
               </div>
               <GlobalSearch 

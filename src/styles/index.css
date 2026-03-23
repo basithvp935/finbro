@@ -49,6 +49,17 @@ input[type="date"]::-webkit-clear-button {
   display: none;
 }
 
+/* Remove Number Input Spinners */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
 /* Premium Scrollbar Styling */
 .premium-scrollbar {
   scrollbar-width: thin;

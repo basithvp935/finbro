@@ -25,6 +25,7 @@ const FileManagement: React.FC = () => {
     const [itemToDelete, setItemToDelete] = useState<FileSystemItem | null>(null);
     const [creationConfig, setCreationConfig] = useState<{ type: 'folder' | 'file'; active: boolean }>({ type: 'file', active: false });
     const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+    const [previewItem, setPreviewItem] = useState<FileSystemItem | null>(null);
     const [newName, setNewName] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -246,7 +247,7 @@ const FileManagement: React.FC = () => {
                 {filteredItems.map(item => (
                     <div 
                         key={item.id}
-                        onDoubleClick={() => item.type === 'folder' && setCurrentFolderId(item.id)}
+                        onDoubleClick={() => item.type === 'folder' ? setCurrentFolderId(item.id) : setPreviewItem(item)}
                         className="aspect-square bg-white dark:bg-slate-900 rounded-[32px] lg:rounded-[48px] border border-slate-200 dark:border-white/5 p-6 lg:p-8 flex flex-col justify-between shadow-sm hover:shadow-2xl lg:hover:-translate-y-2 transition-all cursor-pointer group relative overflow-hidden"
                     >
                         <div className="flex justify-between items-start z-10">
@@ -361,8 +362,67 @@ const FileManagement: React.FC = () => {
                 </div>,
                 document.body
             )}
+
+            {/* File Preview Modal */}
+            {previewItem && createPortal(
+                <div className="fixed inset-0 bg-slate-900/90 dark:bg-black/95 backdrop-blur-3xl z-[1001] flex flex-col animate-in fade-in duration-500">
+                    {/* Header with requested icons */}
+                    <div className="h-16 lg:h-20 bg-emerald-600 dark:bg-emerald-700 flex items-center justify-between px-6 lg:px-10 shadow-2xl relative z-10">
+                        <div className="flex items-center space-x-4">
+                            <div className="w-8 h-8 lg:w-10 lg:h-10 bg-white/20 rounded-xl flex items-center justify-center text-white text-lg">
+                                {previewItem.type === 'image' ? '🖼️' : previewItem.type === 'video' ? '📽️' : '📄'}
+                            </div>
+                            <div>
+                                <h3 className="text-white font-black text-xs lg:text-sm uppercase tracking-widest leading-none truncate max-w-xs">{previewItem.name}</h3>
+                                <p className="text-emerald-100/60 text-[8px] lg:text-[10px] font-black uppercase mt-1 tracking-widest">{previewItem.size} — RAW PROTOCOL</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center space-x-6 lg:space-x-8">
+                            <button onClick={() => handleExport(previewItem)} className="text-white/80 hover:text-white transition-colors" title="Download">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                            </button>
+                            <button className="text-white/80 hover:text-white transition-colors" title="Edit">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                            </button>
+                            <button className="text-white/80 hover:text-white transition-colors" title="Maximize">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
+                            </button>
+                            <div className="w-px h-6 bg-white/20 mx-2"></div>
+                            <button onClick={() => setPreviewItem(null)} className="text-white/80 hover:text-white transition-colors" title="Close">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Preview Content */}
+                    <div className="flex-1 overflow-hidden flex items-center justify-center p-6 lg:p-20 relative">
+                        <div className="absolute inset-0 bg-slate-950/20 pointer-events-none"></div>
+                        {previewItem.type === 'image' && previewItem.url ? (
+                            <img src={previewItem.url} alt={previewItem.name} className="max-w-full max-h-full object-contain rounded-[32px] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.5)] border border-white/10 relative z-10 animate-in zoom-in-95 duration-700" />
+                        ) : previewItem.type === 'video' && previewItem.url ? (
+                            <video src={previewItem.url} controls className="max-w-full max-h-full rounded-[32px] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.5)] border border-white/10 relative z-10 animate-in zoom-in-95 duration-700" />
+                        ) : (
+                            <div className="bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-[48px] p-12 lg:p-20 max-w-2xl w-full text-center space-y-8 relative z-10 animate-in slide-in-from-bottom-10 duration-700">
+                                <div className="text-6xl lg:text-8xl">📄</div>
+                                <div>
+                                    <h4 className="text-2xl lg:text-3xl font-black text-white italic uppercase tracking-tighter mb-4">Volume Encrypted</h4>
+                                    <p className="text-slate-400 text-xs lg:text-sm font-medium leading-relaxed">System protocols restrict raw access to .codofin volumes. Use the export tool to synchronize data with local registries.</p>
+                                </div>
+                                <button 
+                                    onClick={() => handleExport(previewItem)}
+                                    className="bg-emerald-600 text-white px-10 py-5 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 transition-all shadow-xl shadow-emerald-600/20 active:scale-95 mx-auto block"
+                                >
+                                    Decrypt & Download
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>,
+                document.body
+            )}
         </div>
     );
 };
+
 
 export default FileManagement;
